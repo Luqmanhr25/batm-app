@@ -47,7 +47,7 @@ public class RegionRestController {
         return CustomResponse.generate(HttpStatus.BAD_REQUEST, "Error Adding Data");
     }
 
-    @DeleteMapping("region/{id}")
+    @PostMapping("region/{id}")
     public ResponseEntity<Object> delete(@PathVariable(required = true, name = "id") Integer id) {
         regionRepository.deleteById(id);
         return CustomResponse.generate(HttpStatus.OK, "id berhasil dihapus", !regionRepository.findById(id).isPresent());
