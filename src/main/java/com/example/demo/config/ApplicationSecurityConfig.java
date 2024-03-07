@@ -27,9 +27,11 @@ public class ApplicationSecurityConfig {
                 .authorizeHttpRequests((auth) -> {
                     try {
                         auth
-                                .antMatchers("/api/regions").authenticated()
-                                .antMatchers(HttpMethod.GET, "/api/region/{id}").authenticated()
-                                .antMatchers(HttpMethod.POST, "/api/region/**").hasRole("Admin")
+                                .antMatchers("/api/regions").hasAuthority("Manager")
+                                .anyRequest().permitAll()
+                                // .antMatchers("/api/regions").authenticated()
+                                // .antMatchers(HttpMethod.GET, "/api/region/{id}").authenticated()
+                                // .antMatchers(HttpMethod.POST, "/api/region/**").hasRole("Admin")
                                 // .antMatchers(HttpMethod.POST, "/api/region/**").hasAnyRole("Admin, Staff")
                                 .and()
                                 .httpBasic()
