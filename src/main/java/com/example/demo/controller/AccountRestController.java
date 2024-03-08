@@ -13,6 +13,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.example.demo.config.JwtTokenUtil;
+import com.example.demo.config.MyUserDetails;
 import com.example.demo.dto.ChangePassword;
 import com.example.demo.dto.ForgotPassword;
 import com.example.demo.dto.Login;
@@ -21,7 +24,6 @@ import com.example.demo.repository.ParameterRepository;
 import com.example.demo.repository.EmployeeRepository;
 import com.example.demo.dto.Register;
 import com.example.demo.dto.ResponseChangePassword;
-import com.example.demo.dto.ResponseLogin;
 import com.example.demo.handler.CustomResponse;
 import com.example.demo.model.Employee;
 import com.example.demo.model.Role;
@@ -48,6 +50,12 @@ public class AccountRestController {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+	private MyUserDetails userDetails;
+
+    @Autowired
+	private JwtTokenUtil jwtTokenUtil;
 
     @PostMapping("account/form-change-password")
     public ResponseEntity<Object> checkPassword(@RequestBody ChangePassword changePassword) {
@@ -97,10 +105,12 @@ public class AccountRestController {
     public ResponseEntity<Object> login(@RequestBody Login login) {         
         try {             
             Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(login.getEmail(), login.getPassword()));             
-            SecurityContextHolder.getContext().setAuthentication(authentication);              
-            return CustomResponse.generate(HttpStatus.OK, "Login Successful");         
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            userDetails.loadUserByUsername(login.getEmail());
+            final String token = jwtTokenUtil.generateToken(userDetails);
+            return CustomResponse.generate(HttpStatus.OK, "Login Successful", token);         
         } catch (Exception e) {             
-            return CustomResponse.generate(HttpStatus.BAD_REQUEST, "Login Failed");         
+            return CustomResponse.generate(HttpStatus.BAD_REQUEST, "Login Failed", null);         
         }     
     }
 
