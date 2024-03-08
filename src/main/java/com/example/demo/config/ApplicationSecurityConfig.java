@@ -38,7 +38,8 @@ public class ApplicationSecurityConfig{
                 .authorizeHttpRequests((auth) -> {
                     try {
                         auth
-                                .antMatchers("/authenticating","/register").authenticated()
+                                .antMatchers("api/account/authenticating", "api/account/register").authenticated()
+                                .antMatchers("api/regions").hasAuthority("Manager")
                                 .anyRequest().permitAll()
                                 .and()
                                 .exceptionHandling()
