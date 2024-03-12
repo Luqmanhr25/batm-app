@@ -119,7 +119,7 @@ public class AccountController {
 
     @PostMapping("authenticating")
     public String login(Login login) {
-        ResponseLogin responseLogin = employeeRepository.authenticate(login.getEmail());
+        Employee responseLogin = employeeRepository.authenticate(login.getEmail());
 
         if (responseLogin.getEmail().equals(login.getEmail())) {
             return "redirect:/account";

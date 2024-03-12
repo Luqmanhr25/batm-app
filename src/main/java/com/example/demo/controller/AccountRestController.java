@@ -3,11 +3,21 @@ package com.example.demo.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.authorization.AuthorizationManager;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.example.demo.config.JwtTokenUtil;
+import com.example.demo.config.MyUserDetails;
 import com.example.demo.dto.ChangePassword;
 import com.example.demo.dto.ForgotPassword;
 import com.example.demo.dto.Login;
@@ -28,12 +38,28 @@ import com.example.demo.repository.UserRepository;
 public class AccountRestController {
     @Autowired
     private UserRepository userRepository;
+
     @Autowired
     private RoleRepository roleRepository;
+
     @Autowired
     private EmployeeRepository employeeRepository;
+
     @Autowired
     private ParameterRepository parameterRepository;
+
+    @Autowired
+    private AuthenticationManager authenticationManager;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+	private MyUserDetails myUserDetails;
+
+
+    @Autowired
+	private JwtTokenUtil jwtTokenUtil;
 
     @PostMapping("account/form-change-password")
     public ResponseEntity<Object> checkPassword(@RequestBody ChangePassword changePassword) {
@@ -69,8 +95,8 @@ public class AccountRestController {
             if (result) {
                 User user = new User();
                 user.setId(employee.getId());
-                user.setPassword(register.getPassword());
-                Role role = roleRepository.findById(5).orElse(null);
+                user.setPassword(passwordEncoder.encode(register.getPassword()));
+                Role role = roleRepository.findById(2).orElse(null);
                 user.setRole(role);
                 userRepository.save(user);
                 return CustomResponse.generate(HttpStatus.OK, "Register Successfully");
@@ -81,24 +107,29 @@ public class AccountRestController {
 
     @PostMapping("account/authenticating")
     public ResponseEntity<Object> login(@RequestBody Login login) {
-        ResponseLogin responseLogin = employeeRepository.authenticate(login.getEmail());
 
-        if (responseLogin.getEmail().equals(login.getEmail()))  {
-            return CustomResponse.generate(HttpStatus.OK, "Login Successfully");
-        } else {
-            return CustomResponse.generate(HttpStatus.BAD_REQUEST, "Login Failed");
+        try {
+            Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(login.getEmail(), login.getPassword()));
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            final UserDetails userDetails = myUserDetails.loadUserByUsername(login.getEmail());
+            final String token = jwtTokenUtil.generateToken(userDetails);
+            return CustomResponse.generate(HttpStatus.OK, "Login Successfully",token);
+        } catch (Exception e) {
+            return CustomResponse.generate(HttpStatus.BAD_REQUEST, "Login Failed", null);
         }
     }
 
     @PostMapping("account/forgot-password")
-    public ResponseEntity<Object> checkEmail(@RequestBody ForgotPassword forgotPassword, @RequestHeader(name = "fp-nsr") String token) {
+    public ResponseEntity<Object> checkEmail(@RequestBody ForgotPassword forgotPassword,
+            @RequestHeader(name = "fp-nsr") String token) {
         if (token.equals(parameterRepository.findById("fp-nsr").get().getValue())) {
             // menggunakan line dibawah ini untuk get data sekaligus dengan cek email
             User user = userRepository.findUserByEmail(forgotPassword.getEmail());
             if (user.getEmployee().getEmail().equals(forgotPassword.getEmail())) {
                 user.setPassword(forgotPassword.getPassword());
                 userRepository.save(user);
-                // Method dalam Class CustomResponse dibuat static sehingga hanya perlu memanggil classnya saja
+                // Method dalam Class CustomResponse dibuat static sehingga hanya perlu
+                // memanggil classnya saja
                 return CustomResponse.generate(HttpStatus.OK, "Your Password has been Reset");
             }
         }
