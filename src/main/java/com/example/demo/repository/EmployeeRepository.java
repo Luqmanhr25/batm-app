@@ -1,5 +1,7 @@
 package com.example.demo.repository;
 
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -19,7 +21,9 @@ public interface EmployeeRepository extends JpaRepository<Employee, Integer>{
     // public ResponseLogin authenticate(String email);
 
     @Query("""
-            SELECT e FROM Employee e WHERE e.email = ?1
-            """)
+            SELECT e FROM Employee e where e.email= ?1
+            """
+    )
     public Employee authenticate(String email);
+    //  Optional<Employee> findByEmail(String email);
 } 

@@ -1,5 +1,6 @@
 package com.example.demo.controller;
 
+import org.hibernate.dialect.MySQL55Dialect;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -55,8 +56,7 @@ public class AccountRestController {
     private PasswordEncoder passwordEncoder;
 
     @Autowired
-	private MyUserDetails myUserDetails;
-
+    private MyUserDetails myUserDetails;
 
     @Autowired
 	private JwtTokenUtil jwtTokenUtil;
@@ -109,13 +109,23 @@ public class AccountRestController {
     public ResponseEntity<Object> login(@RequestBody Login login) {
 
         try {
-            Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(login.getEmail(), login.getPassword()));
+            // authenticate(...): Ini adalah metode yang dipanggil pada objek authenticationManager untuk melakukan otentikasi.
+            //  Metode ini menerima objek Authentication, yang mewakili kredensial pengguna yang ingin diautentikasi. Dalam contoh ini, 
+            // UsernamePasswordAuthenticationToken digunakan, yang merupakan implementasi dari Authentication 
+            // dan menyediakan kredensial berupa nama pengguna dan kata sandi.
+
+            //intinya adalah pengecekan pengguna/user
+            Authentication authentication = authenticationManager
+                    .authenticate(new UsernamePasswordAuthenticationToken(login.getEmail(), login.getPassword()));
             SecurityContextHolder.getContext().setAuthentication(authentication);
-            final UserDetails userDetails = myUserDetails.loadUserByUsername(login.getEmail());
-            final String token = jwtTokenUtil.generateToken(userDetails);
-            return CustomResponse.generate(HttpStatus.OK, "Login Successfully",token);
+
+            myUserDetails = (MyUserDetails) myUserDetails.loadUserByUsername(login.getEmail());
+            //  UserDetails userDetails = this.userDetails.loadUserByUsername(login.getEmail());
+            
+            final String token = jwtTokenUtil.generateToken(myUserDetails);
+            return CustomResponse.generate(HttpStatus.OK, "berhasil login",token);
         } catch (Exception e) {
-            return CustomResponse.generate(HttpStatus.BAD_REQUEST, "Login Failed", null);
+            return CustomResponse.generate(HttpStatus.BAD_REQUEST, "Cannot login", null);
         }
     }
 

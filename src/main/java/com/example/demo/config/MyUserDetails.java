@@ -16,13 +16,15 @@ import com.example.demo.model.Employee;
 import com.example.demo.repository.EmployeeRepository;
 
 @Service
-public class MyUserDetails implements UserDetails, UserDetailsService{
+public class MyUserDetails implements UserDetails, UserDetailsService {
     private String username;
     private String password;
     private GrantedAuthority authority;
-
+    
     @Autowired
     private EmployeeRepository employeeRepository;
+
+
 
     public MyUserDetails(String username, String password, String authority) {
         this.username = username;
@@ -35,17 +37,28 @@ public class MyUserDetails implements UserDetails, UserDetailsService{
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        Set<GrantedAuthority> grantedAuthority = new HashSet<>();
+        Set<GrantedAuthority> grantedAuthority = new HashSet<>();   
         grantedAuthority.add(authority);
         return grantedAuthority;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         Employee responseLogin = employeeRepository.authenticate(username);
+
+        System.out.println("6"+ responseLogin.getEmail());
+        System.out.println("7"+ responseLogin.getUser().getPassword());
         return new MyUserDetails(responseLogin.getEmail(), 
-                                responseLogin.getUser().getPassword(), 
-                                responseLogin.getUser().getRole().getName());
+                                 responseLogin.getUser().getPassword(),
+                                 responseLogin.getUser().getRole().getName());
     }
 
     @Override
@@ -77,5 +90,4 @@ public class MyUserDetails implements UserDetails, UserDetailsService{
     public boolean isEnabled() {
         return true;
     }
-    
 }

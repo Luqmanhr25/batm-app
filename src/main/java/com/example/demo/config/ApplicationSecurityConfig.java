@@ -3,10 +3,12 @@ package com.example.demo.config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -14,13 +16,15 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
+@EnableWebSecurity
+@EnableGlobalMethodSecurity(prePostEnabled = true)
 public class ApplicationSecurityConfig {
 
-@Autowired
-	private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    @Autowired
+    private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
-@Autowired
-	private JwtRequestFilter jwtRequestFilter;
+    @Autowired
+    private JwtRequestFilter jwtRequestFilter;
 
     @Bean // termasuk dependecies injection menjalankan
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
@@ -30,8 +34,38 @@ public class ApplicationSecurityConfig {
 
     // white listing = adalah akses yang boleh masuk
     // black listing = adalah akses yang tidak boleh masuk atau inputan
-    // .authenticated = sembarang akses atau yang login saja bisa akses
+    // .anyrequest = jenis reques apapun
+    // authenticate = boleh di lihat atau di akses hanya dengan login tanpa liat
+    // role
     // permit all = bisa akses tanpa login
+    // @Bean
+    // public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    // http
+    // .csrf().disable()
+    // .authorizeHttpRequests((auth) -> {
+    // try {
+    // auth
+    // .antMatchers("/account/authenticating", "/account/register")
+    // .authenticated()
+    // .antMatchers("api/regions").hasAuthority("manager")
+    // .anyRequest()
+    // .permitAll()
+    // .and()
+    // .exceptionHandling()
+    // .authenticationEntryPoint(jwtAuthenticationEntryPoint)
+    // .and()
+    // .sessionManagement()
+    // .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+
+    // http.addFilterBefore(jwtRequestFilter,
+    // UsernamePasswordAuthenticationFilter.class);
+    // } catch (Exception e) {
+    // throw new RuntimeException(e);
+    // }
+    // });
+    // return http.build();
+    // }
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) {
         try {
@@ -40,8 +74,8 @@ public class ApplicationSecurityConfig {
                     .csrf().disable()
                     .authorizeRequests((requests) -> requests
                             .antMatchers("/account/authenticating", "/account/register").authenticated()
-                            .antMatchers("api/regions").hasAuthority("Officer")
-                            // .anyRequest().permitAll()
+                            .antMatchers("/api/regions").hasAuthority("admin")
+                            .anyRequest().permitAll()
                     )
                     .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                     .and()
