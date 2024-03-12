@@ -1,9 +1,12 @@
 package com.example.demo.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -27,6 +30,7 @@ import com.example.demo.dto.Register;
 import com.example.demo.dto.ResponseChangePassword;
 import com.example.demo.handler.CustomResponse;
 import com.example.demo.model.Employee;
+import com.example.demo.model.JwtResponse;
 import com.example.demo.model.Role;
 import com.example.demo.repository.RoleRepository;
 import com.example.demo.repository.UserRepository;

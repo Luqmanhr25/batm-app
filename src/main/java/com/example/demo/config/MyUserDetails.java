@@ -45,8 +45,8 @@ public class MyUserDetails implements UserDetails, UserDetailsService{
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         Employee responseLogin = employeeRepository.authenticate(username);
         return new MyUserDetails(responseLogin.getEmail(), 
-                                responseLogin.getUser().getPassword(), 
-                                responseLogin.getUser().getRole().getName());
+                                 responseLogin.getUser().getPassword(), 
+                                 responseLogin.getUser().getRole().getName());
     }
 
     @Override
@@ -78,5 +78,12 @@ public class MyUserDetails implements UserDetails, UserDetailsService{
     public boolean isEnabled() {
         return true;
     }
-    
+
+    public EmployeeRepository getEmployeeRepository() {
+        return employeeRepository;
+    }
+
+    public void setEmployeeRepository(EmployeeRepository employeeRepository) {
+        this.employeeRepository = employeeRepository;
+    }
 }

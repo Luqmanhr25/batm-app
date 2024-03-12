@@ -1,5 +1,9 @@
 package com.example.demo.model;
 
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -12,7 +16,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "tb_m_employee")
-public class Employee {
+public class Employee{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
@@ -59,6 +63,4 @@ public class Employee {
     public void setUser(User user) {
         this.user = user;
     }
-    
-
 }
