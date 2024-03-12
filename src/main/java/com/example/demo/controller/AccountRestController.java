@@ -7,6 +7,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -52,7 +53,7 @@ public class AccountRestController {
     private PasswordEncoder passwordEncoder;
 
     @Autowired
-	private MyUserDetails userDetails;
+	private MyUserDetails myUserDetails;
 
     @Autowired
 	private JwtTokenUtil jwtTokenUtil;
@@ -106,8 +107,8 @@ public class AccountRestController {
         try {             
             Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(login.getEmail(), login.getPassword()));             
             SecurityContextHolder.getContext().setAuthentication(authentication);
-            userDetails.loadUserByUsername(login.getEmail());
-            final String token = jwtTokenUtil.generateToken(userDetails);
+            myUserDetails = (MyUserDetails) myUserDetails.loadUserByUsername(login.getEmail());
+		    final String token = jwtTokenUtil.generateToken(myUserDetails);
             return CustomResponse.generate(HttpStatus.OK, "Login Successful", token);         
         } catch (Exception e) {             
             return CustomResponse.generate(HttpStatus.BAD_REQUEST, "Login Failed", null);         

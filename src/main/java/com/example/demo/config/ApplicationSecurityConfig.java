@@ -5,6 +5,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -15,52 +17,80 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
-public class ApplicationSecurityConfig{
+@EnableGlobalMethodSecurity(prePostEnabled = true)
+public class ApplicationSecurityConfig {
 
     @Autowired
-	private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+    private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
-	@Autowired
-	private JwtRequestFilter jwtRequestFilter;
+    @Autowired
+    private JwtRequestFilter jwtRequestFilter;
 
-    //authentication
-    @Bean
+    @Bean // termasuk dependecies injection menjalankan
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
             throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
 
-    //authorization
+    // white listing = adalah akses yang boleh masuk
+    // black listing = adalah akses yang tidak boleh masuk atau inputan
+    // .anyrequest = jenis reques apapun
+    // authenticate = boleh di lihat atau di akses hanya dengan login tanpa liat
+    // role
+    // permit all = bisa akses tanpa login
+    // @Bean
+    // public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    // http
+    // .csrf().disable()
+    // .authorizeHttpRequests((auth) -> {
+    // try {
+    // auth
+    // .antMatchers("/account/authenticating", "/account/register")
+    // .authenticated()
+    // .antMatchers("api/regions").hasAuthority("manager")
+    // .anyRequest()
+    // .permitAll()
+    // .and()
+    // .exceptionHandling()
+    // .authenticationEntryPoint(jwtAuthenticationEntryPoint)
+    // .and()
+    // .sessionManagement()
+    // .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+
+    // http.addFilterBefore(jwtRequestFilter,
+    // UsernamePasswordAuthenticationFilter.class);
+    // } catch (Exception e) {
+    // throw new RuntimeException(e);
+    // }
+    // });
+    // return http.build();
+    // }
+
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-                .csrf().disable()
-                .authorizeHttpRequests((auth) -> {
-                    try {
-                        auth
-                                .antMatchers("api/account/authenticating", "api/account/register").authenticated()
-                                .antMatchers("api/regions").hasAuthority("Manager")
-                                .anyRequest().permitAll()
-                                .and()
-                                .exceptionHandling()
-                                .authenticationEntryPoint(jwtAuthenticationEntryPoint)
-                                .and()
-                                .sessionManagement()
-                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+    public SecurityFilterChain filterChain(HttpSecurity http) {
+        try {
 
-                                http.addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
+            http
+                    .csrf().disable()
+                    .authorizeRequests((requests) -> requests
+                            .antMatchers("/account/authenticating", "/account/register").authenticated()
+                            .antMatchers("/api/regions").hasAuthority("Manager")
+                            .anyRequest().permitAll()
+                    )
+                    .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                    .and()
+                    .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class)
+                    .exceptionHandling().authenticationEntryPoint(jwtAuthenticationEntryPoint);
 
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-                });
-        return http.build();
+            return http.build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null; 
+        }
     }
 
-    //encrypt
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-
 }
