@@ -12,20 +12,20 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import com.example.demo.dto.ResponseLogin;
 import com.example.demo.model.Employee;
 import com.example.demo.repository.EmployeeRepository;
 
 @Service
-public class MyUserDetails implements UserDetails, UserDetailsService {
+public class MyUserDetails implements UserDetails, UserDetailsService{
     private String username;
     private String password;
     private GrantedAuthority authority;
-    
+
     @Autowired
     private EmployeeRepository employeeRepository;
 
     public MyUserDetails() {
+    
     }
 
     public MyUserDetails(String username, String password, String authority) {

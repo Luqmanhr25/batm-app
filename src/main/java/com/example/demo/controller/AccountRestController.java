@@ -32,7 +32,6 @@ import com.example.demo.repository.ParameterRepository;
 import com.example.demo.repository.EmployeeRepository;
 import com.example.demo.dto.Register;
 import com.example.demo.dto.ResponseChangePassword;
-import com.example.demo.dto.ResponseLogin;
 import com.example.demo.handler.CustomResponse;
 import com.example.demo.model.Employee;
 import com.example.demo.model.JwtResponse;
@@ -54,10 +53,13 @@ public class AccountRestController {
 
     @Autowired
     private ParameterRepository parameterRepository;
+
     @Autowired
     private AuthenticationManager authenticationManager;
+
     @Autowired
     private PasswordEncoder passwordEncoder;
+
     @Autowired
     private MyUserDetails myUserDetails;
     @Autowired 
@@ -83,7 +85,6 @@ public class AccountRestController {
 
 
         System.out.println("respon cuy " +responChangePassword.getEmail());
-        // harus menggunakan 1x request saja untuk mendapatkan email dan password
         if (responChangePassword.getEmail().equals(null) && responChangePassword.getPassword().equals(null)) {
             return CustomResponse.generate(HttpStatus.OK, "user not found");
         } else if (changePassword.getNewPassword().equals(responChangePassword.getPassword())) {
@@ -102,7 +103,6 @@ public class AccountRestController {
         }
     }
 
-    // @PreAuthorize("")
     @PostMapping("account/register")
     public ResponseEntity<Object> save(@RequestBody Register register) {
         String emailExist = employeeRepository.findEmail(register.getEmail());
@@ -119,46 +119,39 @@ public class AccountRestController {
                 Role role = roleRepository.findById(5).orElse(null);
                 user.setRole(role);
                 userRepository.save(user);
-                return CustomResponse.generate(HttpStatus.OK, "Register Successfully");
+                Boolean resultUser = userRepository.findById(employee.getId()).isPresent();
+                if (resultUser) {
+                    return CustomResponse.generate(HttpStatus.OK, "Register Successfully");
+                }else{
+                    employeeRepository.deleteById(employee.getId());
+                    return CustomResponse.generate(HttpStatus.BAD_REQUEST, "Register Failed");
+                }
             }
         }
         return CustomResponse.generate(HttpStatus.BAD_REQUEST, "Register Failed");
     }
 
-
-    @PostMapping("account/authenticating")
-    public ResponseEntity<Object> login(@RequestBody Login login) {
-        
-        try {
-            
-            Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(login.getEmail(), login.getPassword()));
+    @PostMapping("account/authenticating")     
+    public ResponseEntity<Object> login(@RequestBody Login login) {         
+        try {             
+            Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(login.getEmail(), login.getPassword()));             
             SecurityContextHolder.getContext().setAuthentication(authentication);
-            // myUserDetails.loadUserByUsername(login.getEmail());
-
             myUserDetails = (MyUserDetails) myUserDetails.loadUserByUsername(login.getEmail());
-
-		final String token = jwtTokenUtil.generateToken(myUserDetails);
-
-		return ResponseEntity.ok(new JwtResponse(token));
-        } catch (Exception e) {
-            return CustomResponse.generate(HttpStatus.BAD_REQUEST, "Login Failed", null);
-        }
+		    final String token = jwtTokenUtil.generateToken(myUserDetails);
+            return CustomResponse.generate(HttpStatus.OK, "Login Successful", token);         
+        } catch (Exception e) {             
+            return CustomResponse.generate(HttpStatus.BAD_REQUEST, "Login Failed", null);         
+        }     
     }
 
     @PostMapping("account/forgot-password")
     public ResponseEntity<Object> checkEmail(@RequestBody ForgotPassword forgotPassword) {
-        // , @RequestHeader(name = "fp-nsr") String token
-        // if (token.equals(parameterRepository.findById("fp-nsr").get().getValue())) {
-            // menggunakan line dibawah ini untuk get data sekaligus dengan cek email
-            User user = userRepository.findUserByEmail(forgotPassword.getEmail());
-            if (user.getEmployee().getEmail().equals(forgotPassword.getEmail())) {
-                user.setPassword(passwordEncoder.encode(forgotPassword.getPassword()));
-                userRepository.save(user);
-                // Method dalam Class CustomResponse dibuat static sehingga hanya perlu
-                // memanggil classnya saja
-                return CustomResponse.generate(HttpStatus.OK, "Your Password has been Reset");
-            }
-        // }
+        User user = userRepository.findUserByEmail(forgotPassword.getEmail());
+        if (user.getEmployee().getEmail().equals(forgotPassword.getEmail())) {
+            user.setPassword(passwordEncoder.encode(forgotPassword.getPassword()));
+            userRepository.save(user);
+            return CustomResponse.generate(HttpStatus.OK, "Your Password has been Reset");
+        }
         return CustomResponse.generate(HttpStatus.BAD_REQUEST, "Wrong Token");
     }
 }

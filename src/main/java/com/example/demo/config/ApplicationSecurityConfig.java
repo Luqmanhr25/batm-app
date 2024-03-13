@@ -7,10 +7,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -25,54 +24,48 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class ApplicationSecurityConfig {
 
     @Autowired
-    private MyUserDetails myUserDetails;
-
-    @Autowired  
-    private JwtAuthenticationEntryPoint authenticationEntryPoint;
+    private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
     @Autowired
     private JwtTokenFilter jwtTokenFilter;
 
-    private static final Logger logger = LoggerFactory.getLogger(ApplicationSecurityConfig.class);
-
-    @Bean
-    public AuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(myUserDetails);
-        authProvider.setPasswordEncoder(passwordEncoder());
-        return authProvider;
-    }
-
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+    @Bean // termasuk dependecies injection menjalankan
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
+            throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-
-    // authorization
+    // white listing = adalah akses yang boleh masuk
+    // black listing = adalah akses yang tidak boleh masuk atau inputan
+    // .anyrequest = jenis reques apapun
+    // authenticate = boleh di lihat atau di akses hanya dengan login tanpa liat
+    // role
+    // permit all = bisa akses tanpa login
     // @Bean
     // public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-    //     http
-    //         .csrf().disable()
-    //         .authorizeHttpRequests()
-    //         .antMatchers("/api/account/authenticating", "/api/account/register")
-    //         .permitAll()
-    //         .antMatchers("api/regions").hasAuthority("Staff")
-    //         .anyRequest()
-    //         .authenticated()
-    //         .and()
-    //         .exceptionHandling()
-    //         .authenticationEntryPoint(authenticationEntryPoint)
-    //         .and()
-    //         // .authenticationProvider(authenticationProvider())
-    //         .sessionManagement()
-    //         .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-    //         http.addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class);
-            
+    // http
+    // .csrf().disable()
+    // .authorizeHttpRequests((auth) -> {
+    // try {
+    // auth
+    // .antMatchers("/account/authenticating", "/account/register")
+    // .authenticated()
+    // .antMatchers("api/regions").hasAuthority("manager")
+    // .anyRequest()
+    // .permitAll()
+    // .and()
+    // .exceptionHandling()
+    // .authenticationEntryPoint(jwtAuthenticationEntryPoint)
+    // .and()
+    // .sessionManagement()
+    // .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+
+    // http.addFilterBefore(jwtRequestFilter,
+    // UsernamePasswordAuthenticationFilter.class);
+    // } catch (Exception e) {
+    // throw new RuntimeException(e);
+    // }
+    // });
     // return http.build();
     // }
 
@@ -91,12 +84,16 @@ public class ApplicationSecurityConfig {
                     .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                     .and()
                     .addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class)
-                    .exceptionHandling().authenticationEntryPoint(authenticationEntryPoint);
-                    
+                    .exceptionHandling().authenticationEntryPoint(jwtAuthenticationEntryPoint);
             return http.build();
         } catch (Exception e) {
             e.printStackTrace();
             return null; 
         }
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 }
