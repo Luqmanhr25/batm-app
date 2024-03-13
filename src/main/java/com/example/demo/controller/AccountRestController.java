@@ -123,9 +123,9 @@ public class AccountRestController {
             //  UserDetails userDetails = this.userDetails.loadUserByUsername(login.getEmail());
             
             final String token = jwtTokenUtil.generateToken(myUserDetails);
-            return CustomResponse.generate(HttpStatus.OK, "berhasil login",token);
+            return CustomResponse.generate(HttpStatus.OK, "Login Successfully",token);
         } catch (Exception e) {
-            return CustomResponse.generate(HttpStatus.BAD_REQUEST, "Cannot login", null);
+            return CustomResponse.generate(HttpStatus.BAD_REQUEST, "Login Failed", null);
         }
     }
 

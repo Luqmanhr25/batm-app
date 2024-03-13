@@ -74,12 +74,11 @@ public class JwtTokenUtil implements Serializable {
 	public String generateToken(MyUserDetails myUserDetails) {
 		Map<String, Object> claims = new HashMap<>();
 		// Collection<? extends GrantedAuthority> roles = userDetails.getAuthorities();
-		if (myUserDetails.getAuthorities().contains("manager")) {
+		if (myUserDetails.getAuthorities().contains("Manager")) {
             claims.put("role", "manager");
-        }else if (myUserDetails.getAuthorities().contains("staff")) {
+        }
+		if (myUserDetails.getAuthorities().contains("Staff")) {
             claims.put("role", "staff");
-        }else{
-            claims.put("role", "admin");
         }
 		// if (userDetails instanceof MyUserDetails) {
 		// 	String fullName = ((MyUserDetails) userDetails).getFullname();

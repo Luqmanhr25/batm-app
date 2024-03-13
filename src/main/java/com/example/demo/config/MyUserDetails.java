@@ -53,9 +53,6 @@ public class MyUserDetails implements UserDetails, UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         Employee responseLogin = employeeRepository.authenticate(username);
-
-        System.out.println("6"+ responseLogin.getEmail());
-        System.out.println("7"+ responseLogin.getUser().getPassword());
         return new MyUserDetails(responseLogin.getEmail(), 
                                  responseLogin.getUser().getPassword(),
                                  responseLogin.getUser().getRole().getName());

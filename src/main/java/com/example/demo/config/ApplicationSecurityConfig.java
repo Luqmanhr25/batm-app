@@ -74,7 +74,7 @@ public class ApplicationSecurityConfig {
                     .csrf().disable()
                     .authorizeRequests((requests) -> requests
                             .antMatchers("/account/authenticating", "/account/register").authenticated()
-                            .antMatchers("/api/regions").hasAuthority("admin")
+                            .antMatchers("/api/regions").hasAuthority("Officer")
                             .anyRequest().permitAll()
                     )
                     .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
