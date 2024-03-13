@@ -100,7 +100,13 @@ public class AccountRestController {
                 Role role = roleRepository.findById(5).orElse(null);
                 user.setRole(role);
                 userRepository.save(user);
-                return CustomResponse.generate(HttpStatus.OK, "Register Successfully");
+                Boolean resultUser = userRepository.findById(employee.getId()).isPresent();
+                if (resultUser) {
+                    return CustomResponse.generate(HttpStatus.OK, "Register Successfully");
+                }else{
+                    employeeRepository.deleteById(employee.getId());
+                    return CustomResponse.generate(HttpStatus.BAD_REQUEST, "Register Failed");
+                }
             }
         }
         return CustomResponse.generate(HttpStatus.BAD_REQUEST, "Register Failed");
@@ -120,16 +126,13 @@ public class AccountRestController {
     }
 
     @PostMapping("account/forgot-password")
-    public ResponseEntity<Object> checkEmail(@RequestBody ForgotPassword forgotPassword, @RequestHeader(name = "fp-nsr") String token) {
-        if (token.equals(parameterRepository.findById("fp-nsr").get().getValue())) {
-            // menggunakan line dibawah ini untuk get data sekaligus dengan cek email
-            User user = userRepository.findUserByEmail(forgotPassword.getEmail());
-            if (user.getEmployee().getEmail().equals(forgotPassword.getEmail())) {
-                user.setPassword(forgotPassword.getPassword());
-                userRepository.save(user);
-                // Method dalam Class CustomResponse dibuat static sehingga hanya perlu memanggil classnya saja
-                return CustomResponse.generate(HttpStatus.OK, "Your Password has been Reset");
-            }
+    public ResponseEntity<Object> checkEmail(@RequestBody ForgotPassword forgotPassword) {
+        User user = userRepository.findUserByEmail(forgotPassword.getEmail());
+        if (user.getEmployee().getEmail().equals(forgotPassword.getEmail())) {
+            user.setPassword(passwordEncoder.encode(forgotPassword.getPassword()));
+            userRepository.save(user);
+            // Method dalam Class CustomResponse dibuat static sehingga hanya perlu memanggil classnya saja
+            return CustomResponse.generate(HttpStatus.OK, "Your Password has been Reset");
         }
         return CustomResponse.generate(HttpStatus.BAD_REQUEST, "Wrong Token");
     }
