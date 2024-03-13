@@ -24,7 +24,7 @@ public class ApplicationSecurityConfig {
     private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
     @Autowired
-    private JwtRequestFilter jwtRequestFilter;
+    private JwtTokenFilter jwtTokenFilter;
 
     @Bean // termasuk dependecies injection menjalankan
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
@@ -79,7 +79,7 @@ public class ApplicationSecurityConfig {
                     )
                     .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                     .and()
-                    .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class)
+                    .addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class)
                     .exceptionHandling().authenticationEntryPoint(jwtAuthenticationEntryPoint);
 
             return http.build();
